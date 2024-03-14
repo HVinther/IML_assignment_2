@@ -14,6 +14,14 @@ po_RecEnd_rc<-po(
   id = "RecEnd_rc"
 )
 
+po_ClaimInd_Cat<-po(
+  "mutate",
+  mutation=list(
+    ClaimInd = ~as.factor(ClaimInd)
+  ),
+  id = "ClaimInd_Cat"
+)
+
 # Reencodes RecordBeg (POSIXct) to numeric
 po_RecBeg_num<-po(
   "mutate",
