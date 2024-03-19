@@ -37,6 +37,7 @@ Sequential_ranger <- R6Class(
     }
   ),
   
+  #We define the training and prediction methods
   private = list(
     .train = function(task) {
       
@@ -54,7 +55,7 @@ Sequential_ranger <- R6Class(
       regr_data<-task$data()[which(task$data()$ClaimInd==1),]
       regr_data$ClaimInd<-NULL
       
-      #Make regression
+      #Train regressor
       task_regr <- as_task_regr(regr_data,target="ClaimAmount")
       regr_rf <- po("encodeimpact") %>>% po("scale") %>>% lrn("regr.ranger") |>as_learner()
       print("Training regression")
@@ -63,6 +64,7 @@ Sequential_ranger <- R6Class(
     },
     
     .predict = function(task){
+      #Make classification task for prediction
       classif_data<-task$data()
       classif_data$ClaimAmount<-NULL
       task_classif <- as_task_classif(classif_data, target = "ClaimInd")
@@ -70,7 +72,7 @@ Sequential_ranger <- R6Class(
       classif_predict <- self$classif_model$predict(task_classif)
       prob <- classif_predict$prob[,2]
       
-      
+      #Make regression task for prediction
       regr_data<- task$data()
       regr_data$ClaimInd<-NULL
       task_regr<-as_task_regr(regr_data, target="ClaimAmount")
@@ -95,7 +97,7 @@ seq_ranger_explainer = DALEXtra::explain_mlr3(seq_ranger,
                                         data=train_new[,-17],
                                         y=train_new[,17])
 
-plot(predict_parts(seq_ranger_explainer,train_new_sub[374,-17]))
+plot(predict_parts(seq_ranger_explainer,train_new[374,-17]))
 
 
 predictor <- Predictor$new(seq_ranger_explainer,data=train[,-17],y=train[,17])
