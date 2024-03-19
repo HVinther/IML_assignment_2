@@ -52,4 +52,4 @@ loadData<-function(seed = 2024){
   # Tømmer alt fra det funktionens enviroment, ie. de store dataset, som allerede er gemt i det globale enviroment
   rm(list = ls())
 }
-
+loadData()
