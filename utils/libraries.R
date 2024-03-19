@@ -18,3 +18,12 @@ library(DALEXtra)
 library(ALEPlot)
 library(smotefamily)
 library(iml)
+
+## Installs and add extra learners if missing
+if(!require(mlr3extralearners)){
+  remotes::install_github("mlr-org/mlr3extralearners")
+  if(!require(mgcv)){
+    install.packages("mgcv")
+  }
+  library(mlr3extralearners)
+}
