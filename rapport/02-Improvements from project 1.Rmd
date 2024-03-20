@@ -1,6 +1,6 @@
 # Improved learner
 
-In the first project we made the mistake of assuming that the claim indicator was known a priori. This is unrealistic, and we should instead have tried to impute the claim indicator. In order to capture as much information as possible about the certainty of the classification, we use the probability of making a claim. This means that the learner in this case will be a two step proces. First step will be a classification of the probability of making a claim given the features, and the second will be a regression of the claim amount for individuals who have made a claim. Denote these predictions by $\hat{p}_i$ and $\hat{C}_{1i}$ where i corresponds the the i'th observatiot. Our predicted claim amount is then given by $\hat{C}_i=\hat{p}_i\cdot \hat{C}_{1i}$. By default we use random forest for both the classification and the regression, since we concluded in project 1 that it was the best model for the regression task.
+In the first project we made the mistake of assuming that the claim indicator was known a priori. This is unrealistic, and we should instead have tried to impute the claim indicator. In order to capture as much information as possible about the certainty of the classification, we estimate the probability of making a claim. This means that the learner in this case will be a two step proces. First step will be a classification of the probability of making a claim given the features, and the second will be a regression of the claim amount for individuals who have made a claim. Denote these predictions by $\hat{p}_i$ and $\hat{C}_{1i}$ where i corresponds the the i'th observatiot. Our predicted claim amount is then given by $\hat{C}_i=\hat{p}_i\cdot \hat{C}_{1i}$. By default we use random forest for both the classification and the regression, since we concluded in project 1 that it was the best model for the regression task.
 
 It was tricky to make a new mlr3 learner, but once the R6 object class has been understood, it is not an overly difficult task. Making a custom learner has numerous advantages, most importantly for project 2 being that we can use all the same tools for interpretability. The code for the learner can be seen here
 
@@ -90,3 +90,15 @@ make_learner<-function(classifier=lrn("classif.ranger", predict_type = "prob"),
 }
 ```
 
+It would not make much sense to compare this new learner with the learners from project 1 since it is trained to work with much less information and as such would naturally give a higher MSE. Instead we simply plot the true claim amounts against the predicted ones.
+
+```{r,include=FALSE}
+seq_ranger <- readRDS("sequential_ranger_trained")
+ranger_prediction <- readRDS("sequential_ranger_prediction")
+```
+
+```{r}
+plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount")
+```
+
+In this plot the gray line is the line y=x, where points on the line correspond to perfect predictions. The blue line is the best linear fit between the response and the truth. From this plot we can see that our sequential random forest generally underestimates the claim amount, but overall the predictions are not that bad.
