@@ -188,16 +188,24 @@ predictor <- Predictor$new(seq_gam_explainer,data=train_new[,-17],y=train_new[,1
 importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
 
 ##
+df <- 
+  train_new %>%
+  select(-c("ClaimInd","ClaimAmount"))
+
+tg <- train_new$ClaimAmount
+
 prediction_wp <- grph$predict(tna)
 plot(prediction_wp)
 
 gam_explainer_wp = DALEXtra::explain_mlr3(grph,
-                                           data=train_new[,-17],
-                                           y=train_new[,17])
+                                           data = df,
+                                           y = tg)
 
-plot(predict_parts(gam_explainer_wp,train_new[374,-17]))
+plot(predict_parts(gam_explainer_wp,df[374,]))
 
-predictor_wp <- Predictor$new(gam_explainer_wp,data=train_new[,-17],y=train_new[,17])
+predictor_wp <- Predictor$new(gam_explainer_wp,
+                              data = df,
+                              y = tg)
 
 importance_wp<- FeatureImp$new(predictor_wp,loss="mse",n.repetitions=10)
 
