@@ -251,10 +251,10 @@ make_shapleys<-
     ind_of_interest = c(1386, 12286, 2119, 2238, 27833, 27988)
   ){
     df <- 
-      test_new %>%
+      data %>%
       select(-c("ClaimInd","ClaimAmount"))
     
-    df_f <- test_new %>%
+    df_f <- data %>%
       select(-"ClaimAmount")
     
     full_explainer = DALEXtra::explain_mlr3(learner,
