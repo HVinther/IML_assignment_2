@@ -210,17 +210,28 @@ tn_c<-train_new %>%
 grph_classif$train(tn_c)
 grph_classif$predict(tn_c)
 
-## ----------------------------------
-seq_gam<-make_learner(
+## træning af learner ----------------------------------
+seq_gam_lrn<-make_learner(
   classifier = grph_classif,
   regressor = grph_regr,
-  name = "sequential.gam")
-
-seq_gam_lrn<-seq_gam$new()
+  name = "sequential.gam")$new()
 
 task_regr <- TaskRegr$new(id = "claim_prediction", backend = train_new, target = "ClaimAmount")
 
 seq_gam_lrn$train(task_regr)
+
+
+
+
+test_new <- test[,-c(3,4)]
+test_new$ClaimInd<-as.factor(test_new$ClaimInd)
+
+test_task <- TaskRegr$new(id = "claim_prediction", backend = test_new, target = "ClaimAmount")
+
+
+## sammenlining af predictions på test
+seq_gam_lrn$classif_model$model$classif.gam$model
+seq_gam_lrn$regr_model$model$regr.gam$model
 
 prediction <- seq_gam_lrn$predict(task_regr)
 plot(prediction)
@@ -236,6 +247,11 @@ plot(predict_parts(seq_gam_explainer,train_new[374,-17]))
 predictor <- Predictor$new(seq_gam_explainer,data=train_new[,-17],y=train_new[,17])
 
 # importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
+
+
+ind_of_interest<-c(1386, 12286, 2119, 2238, 27833, 27988)
+
+
 
 ##
 df <- 
