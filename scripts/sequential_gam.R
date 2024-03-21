@@ -259,15 +259,15 @@ make_shapleys<-
     
     full_explainer = DALEXtra::explain_mlr3(learner,
                                             data=df_f,
-                                            y=test_new$ClaimAmount)
+                                            y=data$ClaimAmount)
     
     regr_explainer = DALEXtra::explain_mlr3(learner$regr_model,
                                             data = df,
-                                            y = test_new$ClaimAmount)
+                                            y = data$ClaimAmount)
     
     classif_explainer = DALEXtra::explain_mlr3(learner$classif_model,
                                                data = df,
-                                               y = as.integer(test_new$ClaimInd))
+                                               y = as.integer(data$ClaimInd))
     
     
     shapleyplots<-purrr::map(ind_of_interest,\(i){
@@ -300,7 +300,7 @@ make_shapleys<-
     ))
   }
 
-to_save<-make_shapleys(seq_gam_lrn)
+to_save<-make_shapleys(learner = seq_gam_lrn)
 saveRDS(to_save,"save_files/gam_shapley.rds")
 
 
