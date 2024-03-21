@@ -248,7 +248,7 @@ make_shapleys<-
   function(
     learner,
     data = test_new,
-    ind_of_interest = ind_of_interest,
+    ind_of_interest = c(1386, 12286, 2119, 2238, 27833, 27988)
   ){
     df <- 
       test_new %>%
@@ -294,13 +294,15 @@ make_shapleys<-
       unlist(recursive = F) %>%
       gridExtra::grid.arrange(grobs = .,nrow = 6)
     
-    return(
+    return(list(
       "gridded_sp" = gridded_sp,
       "sp_list" = shapleyplotsS
-    )
+    ))
   }
 
-make_shapleys(seq_gam_lrn)
+to_save<-make_shapleys(seq_gam_lrn)
+saveRDS(to_save,"save_files/gam_shapley.rds")
+
 
 ##
 
