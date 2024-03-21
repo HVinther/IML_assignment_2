@@ -247,7 +247,7 @@ test_new$ClaimInd<-as.factor(test_new$ClaimInd)
 make_shapleys<-
   function(
     learner,
-    data = test_new,
+    data = test %>% select(-c("RecordEnd","RecordBeg")) %>% mutate(ClaimInd = as.factor(ClaimInd)),
     ind_of_interest = c(1386, 12286, 2119, 2238, 27833, 27988)
   ){
     df <- 
