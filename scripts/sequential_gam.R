@@ -8,6 +8,8 @@ dir("utils", full.names = T) |>
 
 loadData()
 
+future::plan("multisession", workers = 4)
+
 train_new <- train[,-c(3,4)]
 train_new$ClaimInd<-as.factor(train_new$ClaimInd)
 
@@ -107,9 +109,9 @@ grph_base <-
   po("encode") %>>%
   po("scale")
 
-
-## Steps to produce desired formula
-classif_tr_task<- 
+# regr model --------------------------------------
+## Steps to produce desired formula for reg
+regr_tr_task<- 
   train_new %>%
   select(-"ClaimInd") %>%
   as_task_regr(target = "ClaimAmount")
@@ -119,13 +121,13 @@ grph_init <-
   lrn("regr.featureless") |>
   as_learner()
 
-grph_init$train(task = classif_tr_task)
+grph_init$train(task = regr_tr_task)
 
 grph_init$model$regr.featureless$feature_names
 
 ## Create formula object from featuretypes of temporary model
 
-form<-
+form_regr<-
   grph_init$model$regr.featureless$train_task$feature_names %>%
   data.frame(term = .) %>%
   mutate(terms = 
@@ -137,13 +139,13 @@ form<-
   paste0("ClaimAmount ~ ",.)|>
   as.formula()
 
-form
+form_regr
 
 ## Definition of GAM model
-grph <- 
+grph_regr <- 
   grph_base %>>%
   lrn("regr.gam",
-      formula = form) |>
+      formula = form_regr) |>
   as_learner()
 
 ## test af regr. learner
@@ -156,14 +158,62 @@ tna<-train_new %>%
   select(-ClaimInd) %>%
   as_task_regr(target = "ClaimAmount")
 
-grph$train(tn)
-grph$predict(tna)
+grph_regr$train(tn)
+grph_regr$predict(tna)
 
+# classif model ---------------
+## Steps to produce desired formula
+classif_tr_task<- 
+  train_new %>%
+  select(-"ClaimAmount") %>%
+  as_task_classif(target = "ClaimInd")
 
-##
+grph_init <-
+  grph_base%>>%
+  lrn("classif.featureless") |>
+  as_learner()
+
+grph_init$train(task = classif_tr_task)
+
+grph_init$model$classif.featureless$feature_names
+
+## Create formula object from featuretypes of temporary model
+
+form_classif<-
+  grph_init$model$classif.featureless$train_task$feature_names %>%
+  data.frame(term = .) %>%
+  mutate(terms = 
+           ifelse(term %in% names(train),
+                  paste0("s(",term,")"),
+                  paste0(term))) %>%
+  .$terms %>%
+  paste(collapse = "+") %>%
+  paste0("ClaimInd ~ ",.)|>
+  as.formula()
+
+form_classif
+
+## Definition of GAM model
+grph_classif <-
+  po("classbalancing") %>>%
+  grph_base %>>%
+  lrn("classif.gam",
+      formula = form_classif,
+      predict_type = "prob") |>
+  as_learner()
+
+## test af regr. learner
+tn_c<-train_new %>%
+  select(-ClaimAmount) %>%
+  as_task_classif(target = "ClaimInd")
+
+grph_classif$train(tn_c)
+grph_classif$predict(tn_c)
+
+## ----------------------------------
 seq_gam<-make_learner(
-  classifier = lrn("classif.ranger", predict_type = "prob", num.threads = 16),
-  regressor = grph,
+  classifier = grph_classif,
+  regressor = grph_regr,
   name = "sequential.gam")
 
 seq_gam_lrn<-seq_gam$new()
@@ -185,7 +235,7 @@ plot(predict_parts(seq_gam_explainer,train_new[374,-17]))
 
 predictor <- Predictor$new(seq_gam_explainer,data=train_new[,-17],y=train_new[,17])
 
-importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
+# importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
 
 ##
 df <- 
@@ -194,18 +244,36 @@ df <-
 
 tg <- train_new$ClaimAmount
 
-prediction_wp <- grph$predict(tna)
-plot(prediction_wp)
 
-gam_explainer_wp = DALEXtra::explain_mlr3(grph,
+prediction_regr <- seq_gam_lrn$regr_model$predict(tna)
+plot(prediction_regr)
+
+regr_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$regr_model,
                                            data = df,
                                            y = tg)
 
-plot(predict_parts(gam_explainer_wp,df[374,]))
+plot(predict_parts(regr_explainer,df[374,]))
 
-predictor_wp <- Predictor$new(gam_explainer_wp,
+regr_predictor <- Predictor$new(regr_explainer,
                               data = df,
                               y = tg)
 
-importance_wp<- FeatureImp$new(predictor_wp,loss="mse",n.repetitions=10)
+prediction_classif <- seq_gam_lrn$classif_model$predict(tn_c)
 
+data.frame(prediction_classif$truth,prediction_classif$prob[,2]) %>%
+  plot()
+
+classif_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$classif_model,
+                                          data = df,
+                                          y = as.integer(train_new$ClaimInd))
+
+plot(predict_parts(classif_explainer,df[374,]))
+
+classif_predictor <- Predictor$new(classif_explainers,
+                              data = df,
+                              y = tg)
+
+
+# importance_wp<- FeatureImp$new(predictor_wp,loss="mse",n.repetitions=10)
+
+future::plan("sequential")
