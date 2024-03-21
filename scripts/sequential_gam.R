@@ -8,8 +8,6 @@ dir("utils", full.names = T) |>
 
 loadData()
 
-future::plan("multisession", workers = 4)
-
 train_new <- train[,-c(3,4)]
 train_new$ClaimInd<-as.factor(train_new$ClaimInd)
 
@@ -221,26 +219,22 @@ task_regr <- TaskRegr$new(id = "claim_prediction", backend = train_new, target =
 seq_gam_lrn$train(task_regr)
 
 
-
-
-
-
-## sammenlining af predictions på test
-seq_gam_lrn$classif_model$model$classif.gam$model |> coef()
-seq_gam_lrn$regr_model$model$regr.gam$model
-
-prediction <- seq_gam_lrn$predict(task_regr)
-plot(prediction)
-
-
-seq_gam_explainer = DALEXtra::explain_mlr3(seq_gam_lrn,
-                                              data=train_new[,-17],
-                                              y=train_new[,17])
-
-plot(predict_parts(seq_gam_explainer,train_new[374,-17]))
-
-
-predictor <- Predictor$new(seq_gam_explainer,data=train_new[,-17],y=train_new[,17])
+# ## sammenlining af predictions på test
+# seq_gam_lrn$classif_model$model$classif.gam$model |> coef()
+# seq_gam_lrn$regr_model$model$regr.gam$model
+# 
+# prediction <- seq_gam_lrn$predict(task_regr)
+# plot(prediction)
+# 
+# 
+# seq_gam_explainer = DALEXtra::explain_mlr3(seq_gam_lrn,
+#                                               data=train_new[,-17],
+#                                               y=train_new[,17])
+# 
+# plot(predict_parts(seq_gam_explainer,train_new[374,-17]))
+# 
+# 
+# predictor <- Predictor$new(seq_gam_explainer,data=train_new[,-17],y=train_new[,17])
 
 # importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
 
@@ -250,47 +244,97 @@ ind_of_interest<-c(1386, 12286, 2119, 2238, 27833, 27988)
 test_new <- test[,-c(3,4)]
 test_new$ClaimInd<-as.factor(test_new$ClaimInd)
 
-test_task <- TaskRegr$new(id = "claim_prediction", backend = test_new, target = "ClaimAmount")
+make_shapleys<-
+  function(
+    learner,
+    data = test_new,
+    ind_of_interest = ind_of_interest,
+  ){
+    df <- 
+      test_new %>%
+      select(-c("ClaimInd","ClaimAmount"))
+    
+    df_f <- test_new %>%
+      select(-"ClaimAmount")
+    
+    full_explainer = DALEXtra::explain_mlr3(learner,
+                                            data=df_f,
+                                            y=test_new$ClaimAmount)
+    
+    regr_explainer = DALEXtra::explain_mlr3(learner$regr_model,
+                                            data = df,
+                                            y = test_new$ClaimAmount)
+    
+    classif_explainer = DALEXtra::explain_mlr3(learner$classif_model,
+                                               data = df,
+                                               y = as.integer(test_new$ClaimInd))
+    
+    
+    shapleyplots<-purrr::map(ind_of_interest,\(i){
+      p_full<-plot(predict_parts(full_explainer,df_f[i,]))
+      p_classif<-plot(predict_parts(classif_explainer,df[i,]))
+      p_regr<-plot(predict_parts(regr_explainer,df[i,]))
+      list("p_full" = p_full,
+           "p_classif" = p_classif,
+           "p_regr" = p_regr,
+           "obs" = i)
+    },
+    .progress = T
+    )
+    
+    gridded_sp<-shapleyplots %>% 
+      purrr::map(\(x){
+        out<- 1:3 %>%
+          purrr::map(\(i){
+            x[[i]]+ggtitle(substring(paste(names(x)[i],x$obs,sep = "_"),3))
+          })
+        names(out) <- paste(names(x)[1:3],"obs",x$obs,sep = "_")
+        out
+      }) %>%
+      unlist(recursive = F) %>%
+      gridExtra::grid.arrange(grobs = .,nrow = 6)
+    
+    return(
+      "gridded_sp" = gridded_sp,
+      "sp_list" = shapleyplotsS
+    )
+  }
 
-df <- 
-  test_new %>%
-  select(-c("ClaimInd","ClaimAmount"))
-
-
+make_shapleys(seq_gam_lrn)
 
 ##
 
 
-tg <- train_new$ClaimAmount
-
-
-prediction_regr <- seq_gam_lrn$regr_model$predict(tna)
-plot(prediction_regr)
-
-regr_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$regr_model,
-                                           data = df,
-                                           y = tg)
-
-plot(predict_parts(regr_explainer,df[374,]))
-
-regr_predictor <- Predictor$new(regr_explainer,
-                              data = df,
-                              y = tg)
-
-prediction_classif <- seq_gam_lrn$classif_model$predict(tn_c)
-
-data.frame(prediction_classif$truth,prediction_classif$prob[,2]) %>%
-  plot()
-
-classif_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$classif_model,
-                                          data = df,
-                                          y = as.integer(train_new$ClaimInd))
-
-plot(predict_parts(classif_explainer,df[374,]))
-
-classif_predictor <- Predictor$new(classif_explainers,
-                              data = df,
-                              y = tg)
+# tg <- train_new$ClaimAmount
+# 
+# 
+# prediction_regr <- seq_gam_lrn$regr_model$predict(tna)
+# plot(prediction_regr)
+# 
+# regr_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$regr_model,
+#                                            data = df,
+#                                            y = tg)
+# 
+# plot(predict_parts(regr_explainer,df[374,]))
+# 
+# regr_predictor <- Predictor$new(regr_explainer,
+#                               data = df,
+#                               y = tg)
+# 
+# prediction_classif <- seq_gam_lrn$classif_model$predict(tn_c)
+# 
+# data.frame(prediction_classif$truth,prediction_classif$prob[,2]) %>%
+#   plot()
+# 
+# classif_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$classif_model,
+#                                           data = df,
+#                                           y = as.integer(train_new$ClaimInd))
+# 
+# plot(predict_parts(classif_explainer,df[374,]))
+# 
+# classif_predictor <- Predictor$new(classif_explainers,
+#                               data = df,
+#                               y = tg)
 
 
 # importance_wp<- FeatureImp$new(predictor_wp,loss="mse",n.repetitions=10)
