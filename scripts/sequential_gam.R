@@ -296,7 +296,7 @@ make_shapleys<-
     
     return(list(
       "gridded_sp" = gridded_sp,
-      "sp_list" = shapleyplotsS
+      "sp_list" = shapleyplots
     ))
   }
 
