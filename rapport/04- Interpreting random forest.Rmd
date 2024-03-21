@@ -1,0 +1,172 @@
+# Interpreting random forest
+
+Since there is no inherent structure in a random forest, it is not immediately explainable. We are, however, interested in getting some idea about the overall impact of different features on the claim amount. For this reason we focus on making partial dependence plots.
+
+
+## Partial dependence plots
+We make pdps for continuous variables. This is not really sensible for unordered variables such as Gender and Maristat, and categorical variables like max speed (since this is defined by intervals).
+
+```{r,include=FALSE}
+loadData()
+train_new <- train[,-c(3,4)]
+train_new$ClaimInd<-as.factor(train_new$ClaimInd)
+
+seq_ran<-readRDS("sequential_ranger_trained")
+seq_ran_explain<-explain_mlr3(seq_ran,data=train_new[,-17],y=train_new[,17])
+saveRDS(seq_ran_explain,"sequential_ranger_explainer")
+seq_ran_explain<-readRDS("sequential_ranger_explainer")
+
+seq_ran_pdp<-plot(model_profile(seq_ran_explain,variables=c("Exposure","BonusMalus","DrivAge","HasKmLimit","LicAge","RiskVar"),type="partial"))
+seq_ran_pdp+ggtitle("Partial dependence plot for ranger",subtitle="")
+```
+
+## Histograms for categoricals
+
+<!-- Denne kode er enormt grim -->
+```{r,include=FALSE}
+train_new$pred_claim_amount<-readRDS("sequential_ranger_prediction")$response
+
+mean_predictions <- train_new %>%
+  group_by(Gender) %>%
+  summarise(MeanPrediction = mean(pred_claim_amount, na.rm = TRUE))
+
+# Step 2: Calculate standard error and confidence intervals manually
+summary_df <- train_new %>%
+  group_by(Gender) %>%
+  do({
+    data_group <- .
+    n_size <- nrow(data_group)
+    mean_pred <- mean(data_group$pred_claim_amount, na.rm = TRUE)
+    std_error <- sd(data_group$pred_claim_amount, na.rm = TRUE) / sqrt(n_size)
+    lower_ci <- mean_pred - (std_error * 1.96)
+    upper_ci <- mean_pred + (std_error * 1.96)
+    
+    data.frame(MeanPrediction = mean_pred, StdError = std_error, Lower = lower_ci, Upper = upper_ci)
+  })
+library(ggplot2)
+
+ggplot(summary_df) +
+  # Points with increased size and color differentiation
+  geom_point(mapping=aes(x=Gender, y=MeanPrediction, color=Gender), size=4, alpha=0.8) +
+  
+  # Error bars with adjusted width and color
+  geom_errorbar(mapping=aes(x=Gender, y=MeanPrediction, ymin=Lower, ymax=Upper), 
+                width=0.2, color="darkgray", size=0.8) +
+  
+  # Customizing the plot with labels and title
+  labs(x = "Gender", 
+       y = "Mean Prediction", 
+       title = "Mean claim amount by Gender",
+       subtitle = "Includes 95% confidence intervals") +
+  
+  # Theme customization for a cleaner look
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.2),
+        axis.title.y = element_text(vjust = 1.2)) +
+  
+  # Optional: Customize colors manually if desired
+  scale_color_manual(values = c("Male" = "#1f77b4", "Female" = "#ff7f0e"))
+
+```
+
+```{r,include=FALSE}
+mean_predictions <- train_new %>%
+  group_by(MariStat) %>%
+  summarise(MeanPrediction = mean(pred_claim_amount, na.rm = TRUE))
+
+# Step 2: Calculate standard error and confidence intervals manually
+summary_df <- train_new %>%
+  group_by(MariStat) %>%
+  do({
+    data_group <- .
+    n_size <- nrow(data_group)
+    mean_pred <- mean(data_group$pred_claim_amount, na.rm = TRUE)
+    std_error <- sd(data_group$pred_claim_amount, na.rm = TRUE) / sqrt(n_size)
+    lower_ci <- mean_pred - (std_error * 1.96)
+    upper_ci <- mean_pred + (std_error * 1.96)
+    
+    data.frame(MeanPrediction = mean_pred, StdError = std_error, Lower = lower_ci, Upper = upper_ci)
+  })
+library(ggplot2)
+
+ggplot(summary_df) +
+  # Points with increased size and color differentiation
+  geom_point(mapping=aes(x=MariStat, y=MeanPrediction, color=MariStat), size=4, alpha=0.8) +
+  
+  # Error bars with adjusted width and color
+  geom_errorbar(mapping=aes(x=MariStat, y=MeanPrediction, ymin=Lower, ymax=Upper), 
+                width=0.2, color="darkgray", size=0.8) +
+  
+  # Customizing the plot with labels and title
+  labs(x = "Mariage Status", 
+       y = "Mean Prediction", 
+       title = "Mean claim amount by Mariage Status",
+       subtitle = "Includes 95% confidence intervals") +
+  
+  # Theme customization for a cleaner look
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.2),
+        axis.title.y = element_text(vjust = 1.2)) +
+  
+  # Optional: Customize colors manually if desired
+  scale_color_manual(values = c("Alone" = "#1f77b4", "Other" = "#ff7f0e"))
+```
+
+
+```{r,include=FALSE}
+mean_predictions <- train_new %>%
+  group_by(interaction(MariStat,Gender)) %>%
+  summarise(MeanPrediction = mean(pred_claim_amount, na.rm = TRUE))
+
+# Step 2: Calculate standard error and confidence intervals manually
+summary_df <- train_new %>%
+  group_by(interaction(MariStat,Gender)) %>%
+  do({
+    data_group <- .
+    n_size <- nrow(data_group)
+    mean_pred <- mean(data_group$pred_claim_amount, na.rm = TRUE)
+    std_error <- sd(data_group$pred_claim_amount, na.rm = TRUE) / sqrt(n_size)
+    lower_ci <- mean_pred - (std_error * 1.96)
+    upper_ci <- mean_pred + (std_error * 1.96)
+    
+    data.frame(MeanPrediction = mean_pred, StdError = std_error, Lower = lower_ci, Upper = upper_ci)
+  })
+library(ggplot2)
+
+summary_df$`interaction(MariStat, Gender)`
+
+ggplot(summary_df) +
+  # Points with increased size and color differentiation
+  geom_point(mapping=aes(x=`interaction(MariStat, Gender)`, y=MeanPrediction, color=`interaction(MariStat, Gender)`), size=4, alpha=0.8) +
+  
+  # Error bars with adjusted width and color
+  geom_errorbar(mapping=aes(x=`interaction(MariStat, Gender)`, y=MeanPrediction, ymin=Lower, ymax=Upper), 
+                width=0.2, color="darkgray", size=0.8) +
+  
+  # Customizing the plot with labels and title
+  labs(x = "Marriage Status and Genders", 
+       y = "Mean Prediction", 
+       title = "Mean claim amount by MariStatus.Gender",
+       subtitle = "Includes 95% confidence intervals") +
+  
+  # Theme customization for a cleaner look
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.2),
+        axis.title.y = element_text(vjust = 1.2))+
+  
+  # Optional: Customize colors manually if desired
+  scale_color_manual(values = c("Alone.Female" = "darkred", "Other.Female" = "salmon",Alone.Male="darkblue",Other.Male="cyan"))
+```
+
+
+
+

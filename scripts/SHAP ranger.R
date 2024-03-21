@@ -1,6 +1,4 @@
 lrn_obj = lrn("regr.ranger")
-
-
   
 random_forest <- po_VehAge_num %>>%
   po_VehPrice_int %>>% po_SocCat_int %>>%
@@ -42,6 +40,10 @@ importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
 #the importance of exposure is probably overestimated due to the weighting
 saveRDS(importance,"random_forest_imp")
 importance$plot()
+
+importance <- readRDS("random_forest_imp")
+
+plot(importance)
 
 plan(sequential)
 
