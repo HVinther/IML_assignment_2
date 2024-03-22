@@ -7,7 +7,7 @@ In order to evaluate the importance of the different features we use a feature i
 We can see that using Claim index as a feature, it is by far the most important. Hence we can expect to lose a lot of predictive strength when we don't include it as a feature. 
 ```{r}
 importance1<-readRDS("random_forest_imp")
-plot(importance)
+plot(importance1)
 ```
 
 ## Sequential model
