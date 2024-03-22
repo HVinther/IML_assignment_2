@@ -1,32 +1,41 @@
+
+
 # Interpreting random forest
 
 Since there is no inherent structure in a random forest, it is not immediately explainable. We are, however, interested in getting some idea about the overall impact of different features on the claim amount. For this reason we focus on making partial dependence plots.
 
 
 ## Partial dependence plots
-We make pdps for continuous variables. This is not really sensible for unordered variables such as Gender and Maristat, and categorical variables like max speed (since this is defined by intervals).
+We make pdps for continuous variables. This is not really sensible for unordered variables such as Gender and Maristat, and categorical variables like max speed (since this is defined by intervals). The variables Gender and MariStat can be seen in the next section using 
 
-```{r,include=FALSE}
+```{r,fig.width=6,fig.height=8,warning=FALSE,echo=FALSE,message=FALSE,include=FALSE}
 dir("utils", full.names = T) |>
   sort(decreasing = T) |>
   lapply(source)
+
 loadData()
 train_new <- train[,-c(3,4)]
 train_new$ClaimInd<-as.factor(train_new$ClaimInd)
 
 seq_ran<-readRDS("sequential_ranger_trained")
-seq_ran_explain<-explain_mlr3(seq_ran,data=train_new[,-17],y=train_new[,17])
-saveRDS(seq_ran_explain,"sequential_ranger_explainer")
+#seq_ran_explain<-explain_mlr3(seq_ran,data=train_new[,-17],y=train_new[,17])
+#saveRDS(seq_ran_explain,"sequential_ranger_explainer")
 seq_ran_explain<-readRDS("sequential_ranger_explainer")
 
-seq_ran_pdp<-plot(model_profile(seq_ran_explain,variables=c("Exposure","BonusMalus","DrivAge","HasKmLimit","LicAge","RiskVar"),type="partial"))
+#seq_ran_pdp<-plot(model_profile(seq_ran_explain,variables=c("Exposure","BonusMalus","DrivAge","HasKmLimit","LicAge","RiskVar"),type="partial"))
+#saveRDS(seq_ran_pdp,"sequential_ranger_plot")
+seq_ran_pdp<-readRDS("sequential_ranger_plot")
+```
+
+```{r,fig.width=6,fig.height=8,echo=FALSE}
 seq_ran_pdp+ggtitle("Partial dependence plot for ranger",subtitle="")
 ```
 
-## Histograms for categoricals
+
+## Average response based on gender and mariage status
 
 <!-- Denne kode er enormt grim -->
-```{r,include=FALSE}
+```{r,echo=FALSE,fig.width=6,fig.height=4,warning==FALSE}
 train_new$pred_claim_amount<-readRDS("sequential_ranger_prediction")$response
 
 mean_predictions <- train_new %>%
@@ -54,7 +63,7 @@ ggplot(summary_df) +
   
   # Error bars with adjusted width and color
   geom_errorbar(mapping=aes(x=Gender, y=MeanPrediction, ymin=Lower, ymax=Upper), 
-                width=0.2, color="darkgray", size=0.8) +
+                width=0.2, color="darkgray", linewidth=0.8) +
   
   # Customizing the plot with labels and title
   labs(x = "Gender", 
@@ -75,7 +84,7 @@ ggplot(summary_df) +
 
 ```
 
-```{r,include=FALSE}
+```{r,echo=FALSE,fig.width=6,fig.height=4,warning=FALSE}
 mean_predictions <- train_new %>%
   group_by(MariStat) %>%
   summarise(MeanPrediction = mean(pred_claim_amount, na.rm = TRUE))
@@ -101,7 +110,7 @@ ggplot(summary_df) +
   
   # Error bars with adjusted width and color
   geom_errorbar(mapping=aes(x=MariStat, y=MeanPrediction, ymin=Lower, ymax=Upper), 
-                width=0.2, color="darkgray", size=0.8) +
+                width=0.2, color="darkgray", linewidth=0.8) +
   
   # Customizing the plot with labels and title
   labs(x = "Mariage Status", 
@@ -121,8 +130,7 @@ ggplot(summary_df) +
   scale_color_manual(values = c("Alone" = "#1f77b4", "Other" = "#ff7f0e"))
 ```
 
-
-```{r,include=FALSE}
+```{r,echo=FALSE,fig.width=6,fig.height=4,warning=FALSE}
 mean_predictions <- train_new %>%
   group_by(interaction(MariStat,Gender)) %>%
   summarise(MeanPrediction = mean(pred_claim_amount, na.rm = TRUE))
@@ -142,15 +150,13 @@ summary_df <- train_new %>%
   })
 library(ggplot2)
 
-summary_df$`interaction(MariStat, Gender)`
-
 ggplot(summary_df) +
   # Points with increased size and color differentiation
   geom_point(mapping=aes(x=`interaction(MariStat, Gender)`, y=MeanPrediction, color=`interaction(MariStat, Gender)`), size=4, alpha=0.8) +
   
   # Error bars with adjusted width and color
   geom_errorbar(mapping=aes(x=`interaction(MariStat, Gender)`, y=MeanPrediction, ymin=Lower, ymax=Upper), 
-                width=0.2, color="darkgray", size=0.8) +
+                width=0.2, color="darkgray", linewidth=0.8) +
   
   # Customizing the plot with labels and title
   labs(x = "Marriage Status and Genders", 
@@ -171,13 +177,70 @@ ggplot(summary_df) +
 ```
 
 
-```{r}
+```{r,echo=FALSE}
+make_shapleys<-
+  function(
+    learner,
+    data = test %>% dplyr::select(-c("RecordEnd","RecordBeg")) %>% mutate(ClaimInd = as.factor(ClaimInd)),
+    ind_of_interest = c(1386, 12286, 2119, 2238, 27833, 27988)
+  ){
+    df <- 
+      data %>%
+      dplyr::select(-c("ClaimInd","ClaimAmount"))
+    
+    df_f <- data %>%
+      dplyr::select(-"ClaimAmount")
+    
+    full_explainer = DALEXtra::explain_mlr3(learner,
+                                            data=df_f,
+                                            y=data$ClaimAmount)
+    
+    regr_explainer = DALEXtra::explain_mlr3(learner$regr_model,
+                                            data = df,
+                                            y = data$ClaimAmount)
+    
+    classif_explainer = DALEXtra::explain_mlr3(learner$classif_model,
+                                               data = df,
+                                               y = as.integer(data$ClaimInd))
+    
+    
+    shapleyplots<-purrr::map(ind_of_interest,\(i){
+      p_full<-plot(predict_parts(full_explainer,df_f[i,]))
+      p_classif<-plot(predict_parts(classif_explainer,df[i,]))
+      p_regr<-plot(predict_parts(regr_explainer,df[i,]))
+      list("p_full" = p_full,
+           "p_classif" = p_classif,
+           "p_regr" = p_regr,
+           "obs" = i)
+    },
+    .progress = T
+    )
+    
+    gridded_sp<-shapleyplots %>% 
+      purrr::map(\(x){
+        out<- 1:3 %>%
+          purrr::map(\(i){
+            x[[i]]+ggtitle(substring(paste(names(x)[i],x$obs,sep = "_"),3))
+          })
+        names(out) <- paste(names(x)[1:3],"obs",x$obs,sep = "_")
+        out
+      }) %>%
+      unlist(recursive = F) %>%
+      gridExtra::grid.arrange(grobs = .,nrow = 6)
+    
+    return(list(
+      "gridded_sp" = gridded_sp,
+      "sp_list" = shapleyplots
+    ))
+  }
+
 test_new <- test[,-c(3,4)]
 test_new$ClaimInd<-as.factor(test_new$ClaimInd)
-plan(multisession,workers=8)
-seq_ran_shap<-make_shapleys(seq_ran,test_new)
+#plan(multisession,workers=8)
+#seq_ran_shap<-make_shapleys(seq_ran,test_new)
+seq_ran_shap<-readRDS("sequential_ranger_shapley")
 
-saveRDS(seq_ran_shap,"sequential_ranger_shapley")
+plot(seq_ran_shap)
 ```
 
 
