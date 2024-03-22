@@ -18,4 +18,6 @@ library(DALEXtra)
 library(ALEPlot)
 library(smotefamily)
 library(iml)
+library(R6)
+
 
