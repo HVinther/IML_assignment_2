@@ -1,3 +1,20 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-03-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
+```
+
+
 # Interpretable model
 
 As an interpretable model we propose using a GAMs for both the regressor and classifier part of the custom learner described in section "Improved Learner", ie. the severity/frequency model. For both models, no interactions effects will be included, as to increase the interpretability, while probaly sacrificing accuracy. The regressor part in particular should be quite interpretable as it is additive since the link function is the identity. The classifier part of course includes a link function not equal to the identity, ie. logit, sacrificing a bit of the interpretability. 
@@ -5,4 +22,144 @@ As an interpretable model we propose using a GAMs for both the regressor and cla
 Now for both parts a sigmoid transformation of Exposure is used as a weigthing (as described in the first project). The date features are removed as they conflict with some of the functions used for interpretability. The social category and vehicle price features are transformed to numeric by the adhoc encoding described in the first project. Then all numerics are included using smooths (ie. splines created with the `s` function from `mgcg`), and integers, logicals and factors are dummy encoded. Note, the vehicle age is included as a factor instead of a numeric due to its low number of unique values, which causes some problems with degrees of freedom.
 
 The only difference in the preprocessing steps between the two parts, is the inclusion of the `po("classbalancing")` node in the classifier, which resamples during training such that the frequency of the responses are similar.
+
+## Shapley plots for desired indices
+
+Six observations from the testing set is desired explained, thus a local explanation is attempted here using their shapley plots. We create these plots both for the full model and its two components. The plots for a given index can be inspected using the dropdown menu below.
+
+Recall, that shapley plots attempt to explain the predictor locally as consisting of linear components, thus the plots for the regression model can be read as is, while the reader should keep in mind that the remaining to are non-linear.
+
+As a general note, we see that neither gender nor marital status are a part of the ten features with the largest impact for any of the observations.
+
+```{r,echo = FALSE}
+sp_list<-readRDS("save_files/gam_shapley.rds")[[2]]
+```
+
+### Sharpley plots{.tabset .tabset-dropdown}
+
+#### Observation 1386
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
+gridExtra::grid.arrange(
+  sp_list[[1]]$p_full+
+    ggtitle("Full model"),
+  sp_list[[1]]$p_regr+
+    ggtitle("Regression model"),
+  sp_list[[1]]$p_classif+
+    ggtitle("Classifier model"),
+  nrow = 3
+)
+```
+
+
+
+
+#### Observation 12286
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
+gridExtra::grid.arrange(
+  sp_list[[2]]$p_full+
+    ggtitle("Full model"),
+  sp_list[[2]]$p_regr+
+    ggtitle("Regression model"),
+  sp_list[[2]]$p_classif+
+    ggtitle("Classifier model"),
+  nrow = 3
+)
+```
+
+
+#### Observation 2119
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
+gridExtra::grid.arrange(
+  sp_list[[3]]$p_full+
+    ggtitle("Full model"),
+  sp_list[[3]]$p_regr+
+    ggtitle("Regression model"),
+  sp_list[[3]]$p_classif+
+    ggtitle("Classifier model"),
+  nrow = 3
+)
+```
+
+
+#### Observation 2238
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
+gridExtra::grid.arrange(
+  sp_list[[4]]$p_full+
+    ggtitle("Full model"),
+  sp_list[[4]]$p_regr+
+    ggtitle("Regression model"),
+  sp_list[[4]]$p_classif+
+    ggtitle("Classifier model"),
+  nrow = 3
+)
+```
+
+
+
+
+#### Observation 27833
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
+gridExtra::grid.arrange(
+  sp_list[[5]]$p_full+
+    ggtitle("Full model"),
+  sp_list[[5]]$p_regr+
+    ggtitle("Regression model"),
+  sp_list[[5]]$p_classif+
+    ggtitle("Classifier model"),
+  nrow = 3
+)
+```
+
+#### Observation 27988
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
+gridExtra::grid.arrange(
+  sp_list[[6]]$p_full+
+    ggtitle("Full model"),
+  sp_list[[6]]$p_regr+
+    ggtitle("Regression model"),
+  sp_list[[6]]$p_classif+
+    ggtitle("Classifier model"),
+  nrow = 3
+)
+```
+
+###
+
+## Global explanation 
+
+Apart from the local explanation described in the section before, we can also study global behaviour using partial dependency plots. These pdp plots can be viewed for both the full model as well as its components using the dropdown menu below.
+
+Note, that the shape of the dependence for different variables changes between the components of the model. Now, as some of preprocessing of the features is done in side the learners, some features which actually ends up enterings as numerics and thus with smooths, are not included. This is mainly down to implementation. Optimally these should be studied as well.
+
+### Partial dependency plots {.tabset .tabset-dropdown}
+
+```{r,fig.width = 12, fig.height = 14,echo = FALSE}
+pdp<-readRDS("save_files/gam_pdp.rds")
+```
+
+#### full model
+
+```{r,fig.width = 12, fig.height = 14,echo = FALSE}
+pdp$full
+```
+
+#### Classifier model
+
+```{r,fig.width = 12, fig.height = 14,echo = FALSE}
+pdp$classif
+```
+
+#### Regression model
+
+```{r,fig.width = 12, fig.height = 14,echo = FALSE}
+pdp$regr
+```
+
+###
 
