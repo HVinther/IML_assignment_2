@@ -23,7 +23,7 @@ Now for both parts a sigmoid transformation of Exposure is used as a weigthing (
 
 The only difference in the preprocessing steps between the two parts, is the inclusion of the `po("classbalancing")` node in the classifier, which resamples during training such that the frequency of the responses are similar.
 
-## Shapley plots for desired indices{.tabset .tabset-dropdown}
+## Shapley plots for desired indices
 
 Six observations from the testing set is desired explained, thus a local explanation is attempted here using their shapley plots. We create these plots both for the full model and its two components. The plots for a given index can be inspected using the dropdown menu below.
 
@@ -35,7 +35,9 @@ As a general note, we see that neither gender nor marital status are a part of t
 sp_list<-readRDS("save_files/gam_shapley.rds")[[2]]
 ```
 
-### Observation 1386
+### Sharpley plots{.tabset .tabset-dropdown}
+
+#### Observation 1386
 
 ```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 gridExtra::grid.arrange(
@@ -52,7 +54,7 @@ gridExtra::grid.arrange(
 
 
 
-### Observation 12286
+#### Observation 12286
 
 ```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 gridExtra::grid.arrange(
@@ -67,7 +69,7 @@ gridExtra::grid.arrange(
 ```
 
 
-### Observation 2119
+#### Observation 2119
 
 ```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 gridExtra::grid.arrange(
@@ -82,7 +84,7 @@ gridExtra::grid.arrange(
 ```
 
 
-### Observation 2238
+#### Observation 2238
 
 ```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 gridExtra::grid.arrange(
@@ -99,7 +101,7 @@ gridExtra::grid.arrange(
 
 
 
-### Observation 27833
+#### Observation 27833
 
 ```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 gridExtra::grid.arrange(
@@ -113,7 +115,7 @@ gridExtra::grid.arrange(
 )
 ```
 
-### Observation 27988
+#### Observation 27988
 
 ```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 gridExtra::grid.arrange(
@@ -126,6 +128,8 @@ gridExtra::grid.arrange(
   nrow = 3
 )
 ```
+
+###
 
 ## Global explanation 
 
