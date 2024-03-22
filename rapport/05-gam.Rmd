@@ -146,7 +146,8 @@ pdp<-readRDS("save_files/gam_pdp.rds")
 #### full model
 
 ```{r,fig.width = 12, fig.height = 14,echo = FALSE}
-pdp$full
+pdp$full+
+  ylim(c(-1000,5500))
 ```
 
 #### Classifier model
@@ -163,3 +164,19 @@ pdp$regr
 
 ###
 
+Here follows a few comments for each of the features.
+
+<dl class="dl-horizontal">
+<dt>BonusMalus:</dt>
+<dd>We see that for the full model, BonusMalus has a positive to no effect, with the highest effect achieved at about 120. Considering the components, this seems to be a results mainly of the classifier component, as the predicted amount from the regressor is almost constant, while the classifier has a big well around 200. </dd>
+<dt>DrivAge:</dt> 
+<dd> In the full model the driver age seem to have quite a big impact on the predicted claimed amount, with middleaged individuals having a lower predicted claim amount, while youngsters and elders have a higher predicted claim amount. </dd>
+<dt>Exposure:</dt>
+<dd>Exposure seems to have the largest impact in the classifier component, where a higher level of exposure leads to a higher probability of a claim, while for the regressor a decreasing tendency is observed.</dd>
+<dt>LicAge:</dt>
+<dd> The licence age have some quite wild tail behavior. The regressor component seems to be dragging the predictions for higher ages under the full model down below zero. The classifier component of course also predicts a high chance of claim for older licenses.</dd>
+<dt>Riskvar</dt>
+<dd> This feature has a slightly increasing positive impact across all components, as well as the full model.</dd>
+<dt>HasKmLimit</dt>
+<dd> Note, in the model this inters as a factor, and the difference between the two levels seems to be rather small across the components. </dd>
+</dl>
