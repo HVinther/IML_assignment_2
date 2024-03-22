@@ -309,3 +309,5 @@ make_shapleys<-
 
 to_save<-make_shapleys(learner = seq_gam_lrn)
 saveRDS(to_save,"save_files/gam_shapley.rds")
+
+saveRDS(seq_gam_lrn,"modeller/seq_gam_lrn.rds")
