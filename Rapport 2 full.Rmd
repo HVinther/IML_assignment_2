@@ -1,0 +1,25 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-03-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction {.tabset .tabset-dropdown}
+
+## d1
+
+```{r}
+summary(iris)
+```
+
+
+## d2
+
+```{r}
+mean(cars$speed)
+```
+
