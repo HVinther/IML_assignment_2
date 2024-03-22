@@ -18,6 +18,8 @@ library(DALEXtra)
 library(ALEPlot)
 library(smotefamily)
 library(iml)
+library(R6)
+
 
 ## Installs and add extra learners if missing
 if(!require(mlr3extralearners)){
