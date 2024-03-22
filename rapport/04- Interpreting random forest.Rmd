@@ -7,6 +7,9 @@ Since there is no inherent structure in a random forest, it is not immediately e
 We make pdps for continuous variables. This is not really sensible for unordered variables such as Gender and Maristat, and categorical variables like max speed (since this is defined by intervals).
 
 ```{r,include=FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
 loadData()
 train_new <- train[,-c(3,4)]
 train_new$ClaimInd<-as.factor(train_new$ClaimInd)
@@ -167,6 +170,15 @@ ggplot(summary_df) +
   scale_color_manual(values = c("Alone.Female" = "darkred", "Other.Female" = "salmon",Alone.Male="darkblue",Other.Male="cyan"))
 ```
 
+
+```{r}
+test_new <- test[,-c(3,4)]
+test_new$ClaimInd<-as.factor(test_new$ClaimInd)
+plan(multisession,workers=8)
+seq_ran_shap<-make_shapleys(seq_ran,test_new)
+
+saveRDS(seq_ran_shap,"sequential_ranger_shapley")
+```
 
 
 

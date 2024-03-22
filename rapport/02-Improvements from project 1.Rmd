@@ -98,7 +98,7 @@ ranger_prediction <- readRDS("sequential_ranger_prediction")
 ```
 
 ```{r}
-plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount")
+plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount") #Modify this plot so Maristat and Gender can be seen
 ```
 
 In this plot the gray line is the line y=x, where points on the line correspond to perfect predictions. The blue line is the best linear fit between the response and the truth. From this plot we can see that our sequential random forest generally underestimates the claim amount, but overall the predictions are not that bad.
