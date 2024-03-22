@@ -219,26 +219,33 @@ task_regr <- TaskRegr$new(id = "claim_prediction", backend = train_new, target =
 seq_gam_lrn$train(task_regr)
 
 
-# ## sammenlining af predictions på test
-# seq_gam_lrn$classif_model$model$classif.gam$model |> coef()
-# seq_gam_lrn$regr_model$model$regr.gam$model
-# 
-# prediction <- seq_gam_lrn$predict(task_regr)
-# plot(prediction)
-# 
-# 
-# seq_gam_explainer = DALEXtra::explain_mlr3(seq_gam_lrn,
-#                                               data=train_new[,-17],
-#                                               y=train_new[,17])
-# 
-# plot(predict_parts(seq_gam_explainer,train_new[374,-17]))
-# 
-# 
-# predictor <- Predictor$new(seq_gam_explainer,data=train_new[,-17],y=train_new[,17])
 
-# importance<- FeatureImp$new(predictor,loss="mse",n.repetitions=10)
+seq_gam_explainer = DALEXtra::explain_mlr3(seq_gam_lrn,
+                                              data=train_new[,-17],
+                                              y=train_new[,17])
 
+df <- 
+  train_new %>%
+  select(-c("ClaimInd","ClaimAmount"))
 
+regr_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$regr_model,
+                                        data = df,
+                                        y = train_new$ClaimAmount)
+
+classif_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$classif_model,
+                                           data = df,
+                                           y = as.integer(train_new$ClaimInd))
+
+pdp<-list(
+  "full" = plot(model_profile(seq_gam_explainer))+
+    ggtitle("Partial dependence plot for full model",subtitle = ""),
+  "classif" = plot(model_profile(classif_explainer))+
+    ggtitle("Partial dependence plot for classifier model",subtitle = ""),
+  "regr" = plot(model_profile(regr_explainer))+
+    ggtitle("Partial dependence plot for regressor model",subtitle = "")
+)
+saveRDS(pdp,"save_files/gam_pdp.rds")
+pdp
 ind_of_interest<-c(1386, 12286, 2119, 2238, 27833, 27988)
 
 test_new <- test[,-c(3,4)]
@@ -302,43 +309,3 @@ make_shapleys<-
 
 to_save<-make_shapleys(learner = seq_gam_lrn)
 saveRDS(to_save,"save_files/gam_shapley.rds")
-
-
-##
-
-
-# tg <- train_new$ClaimAmount
-# 
-# 
-# prediction_regr <- seq_gam_lrn$regr_model$predict(tna)
-# plot(prediction_regr)
-# 
-# regr_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$regr_model,
-#                                            data = df,
-#                                            y = tg)
-# 
-# plot(predict_parts(regr_explainer,df[374,]))
-# 
-# regr_predictor <- Predictor$new(regr_explainer,
-#                               data = df,
-#                               y = tg)
-# 
-# prediction_classif <- seq_gam_lrn$classif_model$predict(tn_c)
-# 
-# data.frame(prediction_classif$truth,prediction_classif$prob[,2]) %>%
-#   plot()
-# 
-# classif_explainer = DALEXtra::explain_mlr3(seq_gam_lrn$classif_model,
-#                                           data = df,
-#                                           y = as.integer(train_new$ClaimInd))
-# 
-# plot(predict_parts(classif_explainer,df[374,]))
-# 
-# classif_predictor <- Predictor$new(classif_explainers,
-#                               data = df,
-#                               y = tg)
-
-
-# importance_wp<- FeatureImp$new(predictor_wp,loss="mse",n.repetitions=10)
-
-future::plan("sequential")
