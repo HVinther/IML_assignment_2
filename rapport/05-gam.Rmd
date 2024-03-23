@@ -180,3 +180,44 @@ Here follows a few comments for each of the features.
 <dt>HasKmLimit</dt>
 <dd> Note, in the model this inters as a factor, and the difference between the two levels seems to be rather small across the components. </dd>
 </dl>
+
+## Bias
+
+To inspect if a bias in the model exists with respect to the features gender and marital status, we plot the predictions of test set and stratify these by the interaction of these features. The plot can be seen below. Overall we see very little difference in the predictions between the factors. 
+
+```{r,fig.width = 10, fig.height = 5, echo = FALSE}
+loadData()
+
+sgl<-readRDS("modeller/seq_gam_lrn.rds")
+
+test %>% mutate(
+  full = test[,-c(3,4)] %>%
+    mutate(ClaimInd = as.factor(ClaimInd)) %>%
+    as_task_regr(target = "ClaimAmount") %>%
+    sgl$predict(.) %>%
+    .$response,
+  regr = test[,-c(3,4)] %>% 
+    select(-"ClaimInd") %>%
+    as_task_regr(target = "ClaimAmount") %>%
+    sgl$regr_model$predict(.) %>%
+    .$response,
+  classif = test[,-c(3,4)] %>% 
+    select(-"ClaimAmount") %>% 
+    mutate(ClaimInd = as.factor(ClaimInd)) %>%
+    as_task_classif(target = "ClaimInd") %>%
+    sgl$classif_model$predict(.) %>%
+    .$prob %>%
+    .[,2]
+) %>%
+  pivot_longer(cols = c("full","regr","classif")) %>%
+  ggplot(aes(y = value, 
+             x = interaction(Gender,MariStat),
+             fill = interaction(Gender,MariStat)))+
+  geom_boxplot()+
+  theme(legend.position = "none",
+        axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
+  xlab("")+
+  ylab("prediction")+
+  facet_wrap(~name, scales = "free")
+```
+
