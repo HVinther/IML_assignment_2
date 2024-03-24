@@ -117,7 +117,7 @@ to_plot<-data.frame("x"=ranger_prediction$response,"y"=ranger_prediction$truth,"
 ```
 
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,message=FALSE}
 ggplot(to_plot)+geom_point(mapping=aes(x=x,y=y,color=gender,shape=MariStat))+xlab("predicted claim amount")+ylab("true claim amount")+geom_abline(color="gray")+stat_smooth(method="lm",mapping=aes(x=x,y=y),color="dodgerblue")
 ```
 
