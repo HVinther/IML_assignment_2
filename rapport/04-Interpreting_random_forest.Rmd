@@ -1,10 +1,17 @@
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
+```
+
+
 # Interpreting random forest
 
 Since there is no inherent structure in a random forest, it is not immediately explainable. We are, however, interested in getting some idea about the overall impact of different features on the claim amount. For this reason we focus on making partial dependence plots.
 
 ## Local explanations (shapley) {.tabset .tabset-dropdown}
 
-```{r,fig.width=6,fig.height=8,warning=FALSE,echo=FALSE,message=FALSE,include=FALSE}
+```{r, fig.width = 12, fig.height = 14,warning=FALSE,echo=FALSE,message=FALSE,include=FALSE}
 dir("utils", full.names = T) |>
   sort(decreasing = T) |>
   lapply(source)
@@ -198,17 +205,17 @@ seq_ran_pdp<-readRDS("sequential_ranger_plot")
 ```
 
 #### full model
-```{r,fig.width=6,fig.height=8,echo=FALSE}
+```{r, fig.width = 12, fig.height = 14,echo=FALSE}
 seq_ran_pdp+ggtitle("Partial dependence plot for full sequential random forest",subtitle="")
 ```
 
 #### classifier 
-```{r,fig.width=6,fig.height=8,echo=FALSE}
+```{r, fig.width = 12, fig.height = 14,echo=FALSE}
 readRDS("sequential_ranger_classif_plot")+ggtitle("PDP Classification random forest",subtitle="")
 ```
 
 #### regression
-```{r,fig.width=6,fig.height=8,echo=FALSE}
+```{r, fig.width = 12, fig.height = 14,echo=FALSE}
 readRDS("sequential_ranger_regr_plot")+ggtitle("PDP Regression random forest",subtitle="")
 ```
 

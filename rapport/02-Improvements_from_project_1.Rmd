@@ -1,6 +1,7 @@
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
 ```
 
 
@@ -98,7 +99,7 @@ make_learner<-function(classifier=lrn("classif.ranger", predict_type = "prob"),
 
 It would not make much sense to compare this new learner with the learners from project 1 since it is trained to work with much less information and as such would naturally give a higher MSE. Instead we simply plot the true claim amounts against the predicted ones.
 
-```{r,include=FALSE}
+```{r,echo = FALSE}
 seq_ranger <- readRDS("sequential_ranger_trained")
 ranger_prediction <- readRDS("sequential_ranger_prediction")
 ```
