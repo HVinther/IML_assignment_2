@@ -104,7 +104,7 @@ seq_ranger <- readRDS("sequential_ranger_trained")
 ranger_prediction <- readRDS("sequential_ranger_prediction")
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,include=FALSE}
 dir("utils", full.names = T) |>
   sort(decreasing = T) |>
   lapply(source)
@@ -114,7 +114,10 @@ loadData()
 to_plot<-data.frame("x"=ranger_prediction$response,"y"=ranger_prediction$truth,"gender"=train$Gender,"MariStat"=train$MariStat)
 
 #plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount") #Modify this plot so Maristat and Gender can be seen
+```
 
+
+```{r,echo=FALSE}
 ggplot(to_plot)+geom_point(mapping=aes(x=x,y=y,color=gender,shape=MariStat))+xlab("predicted claim amount")+ylab("true claim amount")+geom_abline(color="gray")+stat_smooth(method="lm",mapping=aes(x=x,y=y),color="dodgerblue")
 ```
 
