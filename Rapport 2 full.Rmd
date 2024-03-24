@@ -30,5 +30,8 @@ dir("utils", full.names = T) |>
 ```{r child = 'rapport/05-gam.Rmd'}
 ```
 
+```{r child = 'rapport/06-comparison_of_learners.Rmd'}
+```
+
 ```{r child = 'rapport/06-Discussion.Rmd'}
 ```

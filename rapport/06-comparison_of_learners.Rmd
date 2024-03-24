@@ -1,0 +1,50 @@
+# Comparison of learners
+
+
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
+```
+
+As a final note, we compare the predictive accuracy on the test set of the models studied in this project. In the table below, the learners are compared both using the full mse and mse on the rows with exposure equal 1. We see that the random forrest model far outperforms both the gam and the debiased gam. Interestingly the debiased gam performs better than the regular gam.
+
+```{r, echo = FALSE}
+loadData()
+
+sgl<-readRDS("modeller/seq_gam_lrn.rds")
+rf<-readRDS("modeller/random_forest_trained")
+
+test_new <- test[,-c(3,4)] %>%
+    as_task_regr(target = "ClaimAmount")
+
+
+df_test<-data.frame(
+    index = 1:nrow(test),
+    Exp_eq_1 = test$Exposure == 1,
+    truth = test$ClaimAmount,
+    random_forest = rf$predict(test_new)$response,
+    gam = sgl$predict(test_new)$response,
+    gam_db = readRDS("gam_db_pred")$prediction
+  ) %>%
+  pivot_longer(cols = c("random_forest","gam","gam_db"), names_to = "Learner") 
+
+df_test%>%
+  group_by(Learner) %>%
+  summarize(
+    "mse" = mean(value),
+    "mse_inter" = sum(value[Exp_eq_1])/sum(Exp_eq_1)
+  ) %>%
+  knitr::kable(., digits = 1, caption = "Comparison of learners")
+```
+
+In the table below, the predictions on the rows of interest can be seen. Note, that it is in a wide format. We see that gam models make quite large predictions.
+
+```{r, echo = FALSE}
+df_test %>% 
+  filter(index %in% c(1386, 12286, 2119, 2238, 27833, 27988)) %>%
+  select(c("index","Learner","value")) %>%
+  pivot_wider(values_from = value, names_from = Learner) %>%
+  knitr::kable(digits = 1, caption = "Comparison of predictions on rows of interest")
+```
+
