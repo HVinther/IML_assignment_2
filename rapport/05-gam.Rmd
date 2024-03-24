@@ -454,4 +454,5 @@ gridExtra::grid.arrange(
   nrow = 3
 )
 ```
+
 We can see here that we did manage debias our model, but the GAM model were already quite unbiased so we can't see a big difference in the two plots.
