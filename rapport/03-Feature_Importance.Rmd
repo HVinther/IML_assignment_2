@@ -5,23 +5,27 @@ In order to evaluate the importance of the different features we use a feature i
 ## Old model
 
 We can see that using Claim index as a feature, it is by far the most important. Hence we can expect to lose a lot of predictive strength when we don't include it as a feature. 
-```{r}
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 importance1<-readRDS("random_forest_imp")
 plot(importance1)
 ```
 
 ## Sequential model
 In this model claim index is unimportant since it is not included in the prediction, but still technically included as a feature.
-```{r}
+
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 importance2<- readRDS("sev_freq_rforest_imp")
 plot(importance2)
 ```
+
 There is a lot of agreement between the two models in terms of which features are the most important. 
 
 ## Gam model
 
-```{r}
+```{r, fig.width = 12, fig.height = 14,echo = FALSE}
 importance3 <- readRDS("importance_gam.rds")
 plot(importance3)
 ```
+
 In this feature importance plot we get a clear difference than from our random forest implementations. The first thing we is everythin is less important than with our random forest implementations, and the most important ones are the age features and the vehicle features. Another thing to note is except for the 4 most important features, then our features are all relatively close to 1, and even have three feature which has less than one.
