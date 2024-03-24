@@ -103,8 +103,18 @@ seq_ranger <- readRDS("sequential_ranger_trained")
 ranger_prediction <- readRDS("sequential_ranger_prediction")
 ```
 
-```{r}
-plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount") #Modify this plot so Maristat and Gender can be seen
+```{r,echo=FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
+
+loadData()
+
+to_plot<-data.frame("x"=ranger_prediction$response,"y"=ranger_prediction$truth,"gender"=train_new$Gender,"MariStat"=train_new$MariStat)
+
+#plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount") #Modify this plot so Maristat and Gender can be seen
+
+ggplot(to_plot)+geom_point(mapping=aes(x=x,y=y,color=gender,shape=MariStat))+xlab("predicted claim amount")+ylab("true claim amount")+geom_abline(color="gray")+stat_smooth(method="lm",mapping=aes(x=x,y=y),color="dodgerblue")
 ```
 
-In this plot the gray line is the line y=x, where points on the line correspond to perfect predictions. The blue line is the best linear fit between the response and the truth. From this plot we can see that our sequential random forest generally underestimates the claim amount, but overall the predictions are not that bad.
+In this plot the gray line is the line y=x, where points on the line correspond to perfect predictions. The blue line is the best linear fit between the response and the truth. From this plot we can see that our sequential random forest generally underestimates the claim amount, but overall the predictions are not that bad. We can also see that the highest claim amounts are all associated with females according to the model, but not according to the data. This bias in the model will be considered later.
