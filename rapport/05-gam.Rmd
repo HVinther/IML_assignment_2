@@ -398,3 +398,28 @@ sgl$classif_model$model$classif.gam$model%>%
   }
 ```
 Still we note very small impacts of these features. Although both females and a marital status of alone leads to a slight increase in predicted probability of a claim.
+
+### Debiasing
+
+For debiasing our model we use fairness via the average natural direct effect. To debias our model we therefore run four predictions on our test data, one with each interaction of our protected variables, and then take the average predicted value.
+
+```{r}
+pred_seq_gam_db <- readRDS("gam_db_pred")
+
+unbiased <- cbind(test_new,pred_seq_gam_db)
+
+pred_full <- data.frame( prediction = seq_gam$predict(test_task)$response)
+
+unbiased$model <- "unbiased"
+
+biased <- cbind(test_new,pred_full)
+
+biased$model <- "biased"
+
+both <- rbind(unbiased,biased)
+
+ggplot(both)+
+  geom_boxplot(mapping = aes(y=prediction, x=interaction(Gender, MariStat),fill = model))
+
+```
+We can see here that we did manage debias our model, but the GAM model were already quite unbiased so we can't see a big difference in the two plots.

@@ -17,3 +17,11 @@ importance2<- readRDS("sev_freq_rforest_imp")
 plot(importance2)
 ```
 There is a lot of agreement between the two models in terms of which features are the most important. 
+
+## Gam model
+
+```{r}
+importance3 <- readRDS("importance_gam.rds")
+plot(importance3)
+```
+In this feature importance plot we get a clear difference than from our random forest implementations. The first thing we is everythin is less important than with our random forest implementations, and the most important ones are the age features and the vehicle features. Another thing to note is except for the 4 most important features, then our features are all relatively close to 1, and even have three feature which has less than one.
