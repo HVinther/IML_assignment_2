@@ -399,7 +399,7 @@ sgl$classif_model$model$classif.gam$model%>%
 ```
 Still we note very small impacts of these features. Although both females and a marital status of alone leads to a slight increase in predicted probability of a claim.
 
-### Debiasing
+### Debiasing {.tabset .tabset-dropdown}
 
 For debiasing our model we use fairness via the average natural direct effect. To debias our model we therefore run four predictions on our test data, one with each interaction of our protected variables, and then take the average predicted value.
 
@@ -419,10 +419,11 @@ biased <- cbind(test_new,pred_full)
 biased$model <- "biased"
 
 both <- rbind(unbiased,biased)
+```
 
-gridExtra::grid.arrange(
-  both %>%
-    ggplot()+
+#### Gender
+```{r, echo = FALSE, fig.height= 8, fig.width=8}
+ggplot(both)+
     geom_boxplot(mapping = aes(y=prediction, x=Gender,fill = model))+
     theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
         plot.title = element_text(face = "bold", size = 16),
@@ -430,9 +431,12 @@ gridExtra::grid.arrange(
         axis.title.x = element_text(vjust = -0.2),
         axis.title.y = element_text(vjust = 1.2),
         axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-    labs(x =""),
-  both %>%
-    ggplot()+
+    labs(x ="")
+```
+
+#### Marriage status
+```{r, echo = FALSE, fig.height= 8, fig.width=8}
+ggplot(both)+
     geom_boxplot(mapping = aes(y=prediction, x=MariStat,fill = model))+
     theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
         plot.title = element_text(face = "bold", size = 16),
@@ -440,9 +444,12 @@ gridExtra::grid.arrange(
         axis.title.x = element_text(vjust = -0.2),
         axis.title.y = element_text(vjust = 1.2),
         axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-    labs(x =""),
-  both %>%
-    ggplot()+
+    labs(x ="")
+```
+
+#### Gender:MarriageStatus
+```{r, echo = FALSE, fig.height= 8, fig.width=8}
+ggplot(both)+
     geom_boxplot(mapping = aes(y=prediction, x=interaction(Gender,MariStat),fill = model))+
     theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
         plot.title = element_text(face = "bold", size = 16),
@@ -450,9 +457,7 @@ gridExtra::grid.arrange(
         axis.title.x = element_text(vjust = -0.2),
         axis.title.y = element_text(vjust = 1.2),
         axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-    labs(x =""),
-  nrow = 3
-)
+    labs(x ="")
 ```
 
 We can see here that we did manage debias our model, but the GAM model were already quite unbiased so we can't see a big difference in the two plots.

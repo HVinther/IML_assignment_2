@@ -111,7 +111,7 @@ dir("utils", full.names = T) |>
 
 loadData()
 
-to_plot<-data.frame("x"=ranger_prediction$response,"y"=ranger_prediction$truth,"gender"=train_new$Gender,"MariStat"=train_new$MariStat)
+to_plot<-data.frame("x"=ranger_prediction$response,"y"=ranger_prediction$truth,"gender"=train$Gender,"MariStat"=train$MariStat)
 
 #plot(ranger_prediction)+xlab("predicted claim amount")+ylab("true claim amount") #Modify this plot so Maristat and Gender can be seen
 
