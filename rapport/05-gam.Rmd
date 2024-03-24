@@ -362,7 +362,7 @@ df_gam %>%
         plot.title = element_text(face = "bold", size = 16))+
   labs(x = "", 
        y = "Prediction", 
-       title = "Claim amount by interacion between marital status and gender")+
+       title = "Claim amount by interaction between marital status and gender")+
   #scale_fill_manual(values = c("Alone.Female" = "darkred", "Other.Female" = "salmon",Alone.Male="darkblue",Other.Male="cyan"))+
   facet_wrap(~name, scales = "free")
 ```
@@ -403,6 +403,7 @@ Still we note very small impacts of these features. Although both females and a 
 
 For debiasing our model we use fairness via the average natural direct effect. To debias our model we therefore run four predictions on our test data, one with each interaction of our protected variables, and then take the average predicted value.
 
+
 ```{r, echo = FALSE, fig.height= 16, fig.width=8}
 pred_seq_gam_db <- readRDS("gam_db_pred")
 
@@ -425,39 +426,51 @@ both <- rbind(unbiased,biased)
 ```{r, echo = FALSE, fig.height= 8, fig.width=8}
 ggplot(both)+
     geom_boxplot(mapping = aes(y=prediction, x=Gender,fill = model))+
-    theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+    theme_minimal(base_size = 14) +
+    theme(# Remove legend if color differentiation by Gender is not needed
         plot.title = element_text(face = "bold", size = 16),
         plot.subtitle = element_text(size = 12),
         axis.title.x = element_text(vjust = -0.2),
         axis.title.y = element_text(vjust = 1.2),
         axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-    labs(x ="")
+    labs(x = "", 
+       y = "Prediction", 
+       title = "Claim amount by gender")
 ```
 
 #### Marriage status
 ```{r, echo = FALSE, fig.height= 8, fig.width=8}
 ggplot(both)+
     geom_boxplot(mapping = aes(y=prediction, x=MariStat,fill = model))+
-    theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+    theme_minimal(base_size = 14) +
+    theme(  # Remove legend if color differentiation by Gender is not needed
         plot.title = element_text(face = "bold", size = 16),
         plot.subtitle = element_text(size = 12),
         axis.title.x = element_text(vjust = -0.2),
         axis.title.y = element_text(vjust = 1.2),
         axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-    labs(x ="")
+    labs(x = "", 
+       y = "Prediction", 
+       title = "Claim amount by Marital status")
 ```
 
 #### Gender:MarriageStatus
 ```{r, echo = FALSE, fig.height= 8, fig.width=8}
 ggplot(both)+
     geom_boxplot(mapping = aes(y=prediction, x=interaction(Gender,MariStat),fill = model))+
-    theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+    theme_minimal(base_size = 14) +
+    theme(  # Remove legend if color differentiation by Gender is not needed
         plot.title = element_text(face = "bold", size = 16),
         plot.subtitle = element_text(size = 12),
         axis.title.x = element_text(vjust = -0.2),
         axis.title.y = element_text(vjust = 1.2),
         axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-    labs(x ="")
+    labs(x = "", 
+       y = "Prediction", 
+       title = "Claim amount by interaction between marital status and gender")
 ```
 
-We can see here that we did manage debias our model, but the GAM model were already quite unbiased so we can't see a big difference in the two plots.
+###
+
+###
+When we looked at how our GAM implementation performed earlier, it appeared that GAM were fairly unbiased across the interactions between our protected features. But when we look at our plots with Marital Status, and our interaction between Marital Status and gender, that we were successful in creating a more unbiased predictions. But based on gender we can't clearly see that our debiased model is less biased than the biased GAM model. The reason why this is, is not clear, but a possible explanation could be because when debiasing we also take the average with respect to the marital status feature.
