@@ -101,7 +101,7 @@ reg_graph<-po_VehAge_num %>>%
   lrn("regr.ranger") |>
   as_learner()
 
-seq_ran<-make_learner(regressor=reg_graph,add=T,name="sequential.ranger")
+make_learner(regressor=reg_graph,add=T,name="sequential.ranger")
 
 
 task_regr <- TaskRegr$new(id = "claim_prediction", backend = train_new, target = "ClaimAmount")
@@ -110,8 +110,10 @@ seq_ranger<-lrn("sequential.ranger")
 
 
 seq_ranger$train(task_regr)
+saveRDS(seq_ranger,"sequential_ranger_trained")
 
 prediction<- seq_ranger$predict(task_regr)
+saveRDS(prediction,"sequential_ranger_prediction")
 plot(prediction)
 
 
