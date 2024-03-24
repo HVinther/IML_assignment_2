@@ -1,6 +1,7 @@
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
 ```
 
 

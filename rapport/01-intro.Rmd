@@ -1,10 +1,3 @@
----
-title: "01-intro.Rmd"
-author: "Hans Vinther-Larsen"
-date: "2024-03-08"
-output: html_document
----
-
 # Introduction
 In this project we consider a severity/frequency model with random forests and GAM. The first part of the project is about implementation of this model, based on the model we found in project 1. Based on this we consider the importance of different features according to the models. We then do local and global explanations of random forests and GAMs, while also covering debiasing for the GAM models. We find that random forests have better predictions, but it is easier to get a general idea of the global impact of the features for GAM. 
 

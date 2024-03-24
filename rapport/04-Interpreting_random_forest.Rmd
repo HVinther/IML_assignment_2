@@ -1,3 +1,10 @@
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
+```
+
+
 # Interpreting random forest
 
 Since there is no inherent structure in a random forest, it is not immediately explainable. We are, however, interested in getting some idea about the overall impact of different features on the claim amount. For this reason we focus on making partial dependence plots.

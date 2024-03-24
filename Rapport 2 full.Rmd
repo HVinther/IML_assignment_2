@@ -8,18 +8,29 @@ date: "2024-03-22"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Introduction {.tabset .tabset-dropdown}
 
-## d1
-
-```{r}
-summary(iris)
+```{r, include = FALSE}
+dir("utils", full.names = T) |>
+  sort(decreasing = T) |>
+  lapply(source)
 ```
 
 
-## d2
 
-```{r}
-mean(cars$speed)
+```{r child = 'rapport/01-intro.Rmd'}
 ```
 
+```{r child = 'rapport/02-Improvements_from_project_1.Rmd'}
+```
+
+```{r child = 'rapport/03-Feature_Importance.Rmd'}
+```
+
+```{r child = 'rapport/04-Interpreting_random_forest.Rmd'}
+```
+
+```{r child = 'rapport/05-gam.Rmd'}
+```
+
+```{r child = 'rapport/06-Discussion.Rmd'}
+```
