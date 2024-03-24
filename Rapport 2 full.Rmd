@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Project 2"
 output: html_document
 date: "2024-03-22"
 ---
@@ -14,8 +14,6 @@ dir("utils", full.names = T) |>
   sort(decreasing = T) |>
   lapply(source)
 ```
-
-
 
 ```{r child = 'rapport/01-intro.Rmd'}
 ```

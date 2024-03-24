@@ -172,16 +172,16 @@ Here follows a few comments for each of the features.
 <dd> Note, in the model this inters as a factor, and the difference between the two levels seems to be rather small across the components. </dd>
 </dl>
 
-## Bias
+### Average response based on gender and mariage status {.tabset .tabset-dropdown}
 
-To inspect if a bias in the model exists with respect to the features gender and marital status, we plot the predictions of test set and stratify these by the interaction of these features. The plot can be seen below. Overall we see very little difference in the predictions between the factors. 
+To inspect if a bias in the model exists with respect to the features gender and marital status, we inspect the prediction on the test set. We plot both the average prediction with a standard 95% confidence interval as well as a simple boxplot of the prediction. These are stratied by the chosen feature in dropdown menu. Note, a plot for each component of the model as well as for the full model is made.
 
 ```{r,fig.width = 10, fig.height = 5, echo = FALSE}
 loadData()
 
 sgl<-readRDS("modeller/seq_gam_lrn.rds")
 
-test %>% mutate(
+df_gam<-test %>% mutate(
   full = test[,-c(3,4)] %>%
     mutate(ClaimInd = as.factor(ClaimInd)) %>%
     as_task_regr(target = "ClaimAmount") %>%
@@ -200,15 +200,201 @@ test %>% mutate(
     .$prob %>%
     .[,2]
 ) %>%
-  pivot_longer(cols = c("full","regr","classif")) %>%
-  ggplot(aes(y = value, 
-             x = interaction(Gender,MariStat),
-             fill = interaction(Gender,MariStat)))+
-  geom_boxplot()+
-  theme(legend.position = "none",
-        axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
-  xlab("")+
-  ylab("prediction")+
+  pivot_longer(cols = c("full","regr","classif"))
+```
+
+#### Gender
+
+```{r,fig.width = 10, fig.height = 5, echo = FALSE, message = FALSE, warning = FALSE}
+df_gam %>%
+  group_by(Gender, name) %>%
+  summarize(
+    mean_pred = mean(value),
+    std_error = sd(value),
+    lower_ci = mean_pred - (std_error * 1.96),
+    upper_ci = mean_pred + (std_error * 1.96)
+  ) %>%
+  ungroup()%>%
+  ggplot() +
+  # Error bars with adjusted width and color
+  geom_errorbar(mapping=aes(x=Gender, y=mean_pred, ymin=lower_ci, ymax=upper_ci), 
+                width=0.2, color="darkgray", linewidth=0.8) +
+  # Points with increased size and color differentiation
+  geom_point(mapping=aes(x=Gender, y=mean_pred, color=Gender), size=4, alpha=0.8) +
+  
+  # Customizing the plot with labels and title
+  labs(x = "Gender", 
+       y = "Mean Prediction", 
+       title = "Mean claim amount by Gender",
+       subtitle = "Includes 95% confidence intervals") +
+  
+  # Theme customization for a cleaner look
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.2),
+        axis.title.y = element_text(vjust = 1.2)) +
+  
+  # Optional: Customize colors manually if desired
+  #scale_color_manual(values = c("Male" = "#1f77b4", "Female" = "#ff7f0e"))+
   facet_wrap(~name, scales = "free")
 ```
 
+```{r,fig.width = 10, fig.height = 5, echo = FALSE, message = FALSE, warning = FALSE}
+df_gam %>%
+  ggplot(aes(y = value, 
+             x = Gender,
+             fill = Gender))+
+  geom_boxplot()+
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", size = 16),
+        axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
+  labs(x = "", 
+       y = "Prediction", 
+       title = "Claim amount by Gender")+
+  facet_wrap(~name, scales = "free")
+```
+
+#### Maristat
+
+```{r,fig.width = 10, fig.height = 5, echo = FALSE, message = FALSE, warning = FALSE}
+df_gam %>%
+  group_by(MariStat, name) %>%
+  summarize(
+    mean_pred = mean(value),
+    std_error = sd(value),
+    lower_ci = mean_pred - (std_error * 1.96),
+    upper_ci = mean_pred + (std_error * 1.96)
+  ) %>%
+  ungroup()%>%
+  ggplot() +
+  # Error bars with adjusted width and color
+  geom_errorbar(mapping=aes(x=MariStat, y=mean_pred, ymin=lower_ci, ymax=upper_ci), 
+                width=0.2, color="darkgray", linewidth=0.8) +
+  # Points with increased size and color differentiation
+  geom_point(mapping=aes(x=MariStat, y=mean_pred, color=MariStat), size=4, alpha=0.8) +
+  
+  # Customizing the plot with labels and title
+  labs(x = "Marital status", 
+       y = "Mean Prediction", 
+       title = "Mean claim amount by marital status",
+       subtitle = "Includes 95% confidence intervals") +
+  
+  # Theme customization for a cleaner look
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.2),
+        axis.title.y = element_text(vjust = 1.2)) +
+  
+  # Optional: Customize colors manually if desired
+  #scale_color_manual(values = c("Alone" = "#1f77b4", "Other" = "#ff7f0e"))+
+  facet_wrap(~name, scales = "free")
+```
+```{r,fig.width = 10, fig.height = 5, echo = FALSE, message = FALSE, warning = FALSE}
+df_gam %>%
+  ggplot(aes(y = value, 
+             x = MariStat,
+             fill = MariStat))+
+  geom_boxplot()+
+  xlab("")+
+  theme_minimal(base_size = 14)+
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", size = 16),
+        axis.text.x=element_text(angle=30, vjust = 1, hjust = 1))+
+  labs(x = "", 
+       y = "Prediction", 
+       title = "Claim amount by marital status")+
+  #scale_fill_manual(values = c("Alone" = "#1f77b4", "Other" = "#ff7f0e"))+
+  facet_wrap(~name, scales = "free")
+```
+
+#### Interaction
+
+```{r,fig.width = 10, fig.height = 5, echo = FALSE, message = FALSE, warning = FALSE}
+df_gam %>%
+  group_by(interaction(MariStat,Gender), name) %>%
+  summarize(
+    mean_pred = mean(value),
+    std_error = sd(value),
+    lower_ci = mean_pred - (std_error * 1.96),
+    upper_ci = mean_pred + (std_error * 1.96)
+  ) %>%
+  ungroup()%>%
+  ggplot() +
+  # Error bars with adjusted width and color
+  geom_errorbar(mapping=aes(x=`interaction(MariStat, Gender)`, y=mean_pred, ymin=lower_ci, ymax=upper_ci), 
+                width=0.2, color="darkgray", linewidth=0.8) +
+  # Points with increased size and color differentiation
+  geom_point(mapping=aes(x=`interaction(MariStat, Gender)`, y=mean_pred, color=`interaction(MariStat, Gender)`), size=4, alpha=0.8) +
+  
+  # Customizing the plot with labels and title
+  labs(x = "Marriage Status and Genders", 
+       y = "Mean Prediction", 
+       title = "Mean claim amount by MariStatus.Gender",
+       subtitle = "Includes 95% confidence intervals") +
+  
+  # Theme customization for a cleaner look
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",  # Remove legend if color differentiation by Gender is not needed
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12),
+        axis.title.x = element_text(vjust = -0.2),
+        axis.title.y = element_text(vjust = 1.2),
+        axis.text.x=element_text(angle=30, vjust = 1, hjust = 1)) +
+  
+  # Optional: Customize colors manually if desired
+  #scale_color_manual(values = c("Alone.Female" = "darkred", "Other.Female" = "salmon",Alone.Male="darkblue",Other.Male="cyan"))+
+  facet_wrap(~name, scales = "free")
+```
+```{r,fig.width = 10, fig.height = 5, echo = FALSE, message = FALSE, warning = FALSE}
+df_gam %>%
+  ggplot(aes(y = value, 
+             x = interaction(MariStat,Gender),
+             fill = interaction(MariStat,Gender)))+
+  geom_boxplot()+
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",
+        axis.text.x=element_text(angle=30, vjust = 1, hjust = 1),
+        plot.title = element_text(face = "bold", size = 16))+
+  labs(x = "", 
+       y = "Prediction", 
+       title = "Claim amount by interacion between marital status and gender")+
+  #scale_fill_manual(values = c("Alone.Female" = "darkred", "Other.Female" = "salmon",Alone.Male="darkblue",Other.Male="cyan"))+
+  facet_wrap(~name, scales = "free")
+```
+
+### 
+
+Over all, we see very little difference in the predictions between the different levels of the inspected features. Especially the classification part seems to make almost no discrimination. Slight discrimination might happen in the regression part with regards to the marital status, where a lower mean prediction as well as a tighter confidence band is seen for the alone level as well as interactions with this. Thus we would expect a debiasing of the model in regards to these features would make very little change to the predicted claim amounts.
+
+We could of course also inspect the coefficients of the components models. As the regression model is additive the effect can be read directly.
+
+```{r, echo = FALSE}
+sgl$regr_model$model$regr.gam$model %>%
+  coefficients()%>%
+  {
+    ins = .
+    Gen = stringr::str_detect(string = names(ins),pattern = "Gender",negate = F)
+    Mar = stringr::str_detect(string = names(ins),pattern = "MariStat",negate = F)
+    ins[Gen | Mar]
+  }
+```
+We see that the direct impact of these features is that females get a predicted claim amount of about 11 more than men, while difference with respect to marital status is about 55. Given that the average predicted claim amount is in the thousands these differences are minute. Of course, there might still exist some bias due to indirect effects.
+
+Now, considering the classifier component the equivalent coefficients can be extracted. However, as this model includes a link function the interpretation is not as straight forward as with the regression component.
+
+```{r, echo = FALSE}
+sgl$classif_model$model$classif.gam$model%>%
+  coefficients()%>%
+  {
+    ins = .
+    Gen = stringr::str_detect(string = names(ins),pattern = "Gender",negate = F)
+    Mar = stringr::str_detect(string = names(ins),pattern = "MariStat",negate = F)
+    ins[Gen | Mar]
+  }
+```
+Still we note very small impacts of these features. Although both females and a marital status of alone leads to a slight increase in predicted probability of a claim.
